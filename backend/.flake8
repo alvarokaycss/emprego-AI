@@ -1,0 +1,15 @@
+[flake8]
+max-line-length = 100
+
+# ignora conflitos comuns com formatadores (ex: Black)
+extend-ignore = E203, W503
+
+# evita analisar arquivos desnecessários
+exclude =
+    .venv,
+    __pycache__,
+    .mypy_cache,
+    migrations
+
+# nível básico de qualidade
+max-complexity = 10
