@@ -16,7 +16,7 @@ function App() {
     <div className="max-w-4xl mx-auto py-12 px-4">
       <header className="mb-12 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">EmpregoAÍ</h1>
-        <p className="text-slate-400">Monitorando oportunidades em tempo real.</p>
+        <p className="text-slate-600">Monitorando oportunidades em tempo real.</p>
       </header>
 
       {loading ? (

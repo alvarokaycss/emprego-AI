@@ -78,7 +78,7 @@ def start_scheduler():
 
 @app.get("/jobs", response_model=list[JobResponse])
 def get_jobs(db: Session = Depends(get_db)) -> list[JobModel]:
-    return db.query(JobModel).order_by(JobModel.discovered_at.desc()).all()
+    return db.query(JobModel).order_by(JobModel.discovered_at.desc()).limit(3)
 
 
 if __name__ == "__main__":
