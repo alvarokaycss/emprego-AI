@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        fundo: '#EEFAFB',
+        fundo: '#E6FDFF',
         superficie: '#FFED75',
         botao: '#FFFDEB',
         botao_hover: '#FBF6C8',
