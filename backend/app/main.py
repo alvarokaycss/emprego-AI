@@ -1,16 +1,21 @@
 # type: ignore
 
-from app.infrastructure.database.models import JobModel
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi.middleware.cors import CORSMiddleware
+
 from sqlalchemy.orm import Session
+
 from apscheduler.schedulers.background import BackgroundScheduler
-from app.infrastructure.database.config import init_db, get_db, SessionLocal
+
 from app.application.job_service import JobService
+
+from app.infrastructure.database.config import init_db, get_db, SessionLocal
+from app.infrastructure.database.models import JobModel
 from app.infrastructure.scrapers.trabalha_brasil import TrabalhaBrasilScraper
 from app.infrastructure.database.repository import JobRepository
 from app.infrastructure.notifier import NotifierService
-from app.interfaces.schemas import JobResponse
-from fastapi.middleware.cors import CORSMiddleware
+from app.interfaces.schemas import JobResponse, SearchRequest
+from app.infrastructure.database.websocket import ConnectionManager
 
 
 app = FastAPI(title="EmpregoAÍ")
@@ -22,6 +27,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+manager = ConnectionManager()
 
 init_db()
 
@@ -76,9 +83,57 @@ def start_scheduler():
     print("[SERVER] Scheduler iniciado com sucesso.")
 
 
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+
 @app.get("/jobs", response_model=list[JobResponse])
 def get_jobs(db: Session = Depends(get_db)) -> list[JobModel]:
-    return db.query(JobModel).order_by(JobModel.discovered_at.desc()).limit(3)
+    return db.query(JobModel).order_by(JobModel.discovered_at.desc()).all()
+
+
+@app.post("/search")
+async def custom_job_search(
+    request: SearchRequest,
+    db: Session = Depends(get_db)
+):
+
+    try:
+        scraper = TrabalhaBrasilScraper()
+        repo = JobRepository(db)
+        service = JobService(scraper, repo)
+
+        vagas_novas = service.execute_update(request.keyword)
+
+        if vagas_novas:
+            vagas_dict = [
+                {
+                    "id": vaga.id,
+                    "title": vaga.title,
+                    "company": vaga.company,
+                    "location": vaga.location,
+                    "link": vaga.link,
+                    "site_source": vaga.site_source,
+                    "discovered_at": vaga.discovered_at.isoformat()
+                } for vaga in vagas_novas
+            ]
+            await manager.broadcast(vagas_dict)
+
+    except Exception as e:
+        print(f"[API] Erro na busca: {str(e)}")
+        return []
+
+    return {
+        "message": "Busca concluída com sucesso!",
+        "keyword": request.keyword,
+        "jobs_found": len(vagas_novas)
+    }
 
 
 if __name__ == "__main__":

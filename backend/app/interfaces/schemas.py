@@ -13,4 +13,8 @@ class JobResponse(BaseModel):
     discovered_at: datetime
 
     class Config:
-        from_attributes = True  # Permite converter SQLAlchemy → Pydantic automaticamente
+        from_attributes = True
+
+
+class SearchRequest(BaseModel):
+    keyword: str

@@ -25,4 +25,8 @@ class JobRepository:
 
     def exists_by_link(self, link: str) -> bool:
         """Verifica se uma vaga com esse link já existe (Anti-Duplicate)"""
-        return self.db.query(JobModel).filter(JobModel.link == link).first() is not None
+        return (
+            self.db.query(JobModel)
+            .filter(JobModel.link == link)
+            .first() is not None
+        )

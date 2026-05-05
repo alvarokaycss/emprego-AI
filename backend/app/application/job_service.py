@@ -14,7 +14,8 @@ class JobService:
 
         for vaga in vagas_encontradas:
             if not self.repository.exists_by_link(vaga.link):
-                self.repository.save(vaga)
+                db_job = self.repository.save(vaga)
+                vaga.id = db_job.id
                 novas_vagas.append(vaga)
 
         return novas_vagas
