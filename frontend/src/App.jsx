@@ -5,6 +5,7 @@ import JobCard from './components/JobCard'
 function App() {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [toastMessage, setToastMessage] = useState(null)
 
 useEffect(() => {
   // 1. Permissão de notificação
@@ -26,6 +27,9 @@ useEffect(() => {
     const newJobs = JSON.parse(event.data);
 
     setJobs(oldJobs => [...newJobs, ...oldJobs]);
+    
+    setToastMessage(`Nova(s) vaga(s) encontrada(s)!`)
+    setTimeout(() => setToastMessage(null), 4000)
 
     // 4. Notificação (no lugar correto)
     if ("Notification" in window && Notification.permission === "granted") {
@@ -45,6 +49,14 @@ useEffect(() => {
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">EmpregoAÍ</h1>
         <p className="text-slate-600">Monitorando oportunidades em tempo real.</p>
       </header>
+
+{toastMessage && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-botao text-primaria border border-texto font-bold px-6 py-4 rounded-xl shadow-2xl animate-bounce">
+            {toastMessage}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-20 animate-pulse text-slate-500">

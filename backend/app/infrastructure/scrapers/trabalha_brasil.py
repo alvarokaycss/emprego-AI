@@ -28,7 +28,6 @@ class TrabalhaBrasilScraper(JobScraperStrategy):
 
             # O 'pai' de tudo é o article com a classe job-card
             job_cards = soup.find_all("article", class_="job-card")
-            print(f"[DEBUG] Cards encontrados com a nova estrutura: {len(job_cards)}")
 
             for card in job_cards:
                 try:
