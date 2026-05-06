@@ -18,7 +18,7 @@ export default function JobCard({ job }) {
           href={job.link} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="bg-botao bg-opacity-70 border border-primaria hover:bg-blue-400 hover:bg-opacity-25 text-primaria  px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+          className="bg-botao bg-opacity-70 border border-primaria hover:bg-blue-300 hover:bg-opacity-25 text-primaria  px-4 py-2 rounded-lg text-sm font-semibold transition-all"
         >
           Visualizar Vaga
         </a>

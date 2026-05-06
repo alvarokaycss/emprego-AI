@@ -10,15 +10,15 @@ export default function Header() {
     }
 
     return (
-        <header className="fixed flex gap-5 top-5 left-1/2 -translate-x-1/2 z-50 w-[90%]">
+        <header className="fixed flex flex-col lg:flex-row items-center gap-3 lg:gap-5 top-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl">
 
-            <div className="top-5 left-5 bg-fundo shadow-md border border-primaria rounded-full flex items-center gap-1 pl-1 pr-6">
-                <img className="ml-1 h-12 w-12" src="/favpsy.svg" alt="Psyduck"></img>
-                <h1 className="text-3xl font-extrabold mb-2">EmpregoAÍ</h1>
+            <div className="bg-fundo shadow-md border border-primaria rounded-full flex items-center gap-2 pl-2 pr-6 py-1">
+                <img className="h-10 w-10 lg:h-12 lg:w-12" src="/favpsy.svg" alt="Psyduck" />
+                <h1 className="text-2xl lg:text-3xl font-extrabold">EmpregoAÍ</h1>
             </div>
 
-            <div className="bg-fundo border border-primaria rounded-full shadow-md w-[80%]">
-                <ul className="flex items-center h-12 gap-36 my-1 px-5 font-semibold">
+            <div className="bg-fundo border border-primaria rounded-full shadow-md w-full lg:flex-1">
+                <ul className="flex items-center justify-between lg:justify-center h-12 gap-1 md:gap-10 px-2 lg:px-5 font-semibold text-xs md:text-base">
                     <NavLink to="/" className={getLinkClasses}>Buscar Vagas</NavLink>
                     <NavLink to="/filtros" className={getLinkClasses}>Filtros</NavLink>
                     <NavLink to="/monitoramento" className={getLinkClasses}>Monitoramento</NavLink>

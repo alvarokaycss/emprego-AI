@@ -5,9 +5,31 @@ import Header from './components/Header'
 import { Routes, Route } from 'react-router-dom'
 
 function App() {
-  const [jobs, setJobs] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [toastMessage, setToastMessage] = useState(null)
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearch = async (e) => {
+    e.preventDefault(); // Evita que a página recarregue ao dar Enter
+    if (!keyword) return;
+
+    setIsSearching(true);
+    try {
+      await fetch("http://localhost:8000/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword })
+      });
+      // Sucesso! Limpamos o input. O WebSocket vai cuidar do resto.
+      setKeyword(''); 
+    } catch (error) {
+      console.error("Erro na busca", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Permissão de notificação
@@ -50,8 +72,8 @@ function App() {
       <Header />
 
       {toastMessage && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-botao text-primaria border border-texto font-bold px-6 py-4 rounded-xl shadow-2xl animate-bounce">
+        <div className="fixed top-36 lg:top-24 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-max">
+          <div className="bg-botao text-primaria border border-texto font-bold px-4 md:px-6 py-3 md:py-4 rounded-xl shadow-2xl animate-bounce text-center text-sm md:text-base w-full">
             {toastMessage}
           </div>
         </div>
@@ -60,7 +82,27 @@ function App() {
       <Routes>
 
         <Route path='/' element={
-          <div className="max-w-4xl mx-auto pt-40 py-12 px-4">
+          <div className="max-w-4xl mx-auto pt-36 pb-12 px-4">
+
+              <div className="w-full max-w-lg mx-auto mb-10">
+                <form onSubmit={handleSearch} className="flex items-center bg-fundo border border-primaria rounded-full shadow-lg p-1">
+                  <input 
+                    type="text" 
+                    placeholder="Busque por um cargo específico..." 
+                    className="flex-1 bg-transparent text-texto px-4 outline-none placeholder-slate-400"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                  />
+                  <button 
+                    type="submit" 
+                    disabled={isSearching}
+                    className="bg-blue-300 bg-opacity-25 hover:bg-blue-300 text-primaria px-6 py-2 rounded-full font-semibold transition-all disabled:opacity-50"
+                  >
+                    {isSearching ? "Buscando..." : "Buscar"}
+                  </button>
+                </form>
+              </div>
+
             {loading ? (
               <div className="text-center py-20 animate-pulse text-slate-500">
                 Sincronizando com o banco de dados...
