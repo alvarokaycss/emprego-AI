@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Espelha a pasta local "backend" para dentro de "/app" no container.
+      # Isso garante o Hot-Reload: você altera o código no VS Code e atualiza na hora!
+      - ./backend:/app
+    environment:
+      # Garante que os logs do Python (print) apareçam direto no terminal do Docker
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # Esta linha abaixo é um truque para ignorar a pasta node_modules do seu computador
+      # e usar apenas a pasta node_modules que o Docker instalou lá dentro.
+      - /app/node_modules
+    environment:
+      # No Windows com WSL2/Docker, às vezes o Vite precisa de Polling para o Hot-Reload funcionar
+      - CHOKIDAR_USEPOLLING=true
+    # Garante que o frontend só inicie depois que o backend já estiver subindo
+    depends_on:
+      - backend
+    restart: unless-stopped
