@@ -1,6 +1,7 @@
 # flake8: noqa
 
 import requests
+import re
 from bs4 import BeautifulSoup
 from typing import List
 from app.domain.models import Job
@@ -11,7 +12,9 @@ class TrabalhaBrasilScraper(JobScraperStrategy):
         self.base_url = "https://www.trabalhabrasil.com.br/vagas-de-emprego"
 
     def fetch_jobs(self, keyword: str) -> List[Job]:
-        formatted_keyword = keyword.replace(" ", "-").lower()
+        # Adiciona "home office" para forçar que a busca retorne apenas vagas remotas
+        search_term = f"{keyword} home office"
+        formatted_keyword = search_term.replace(" ", "-").lower()
         url = f"{self.base_url}/{formatted_keyword}"
         
         headers = {
@@ -38,6 +41,13 @@ class TrabalhaBrasilScraper(JobScraperStrategy):
                     # 2. Link (é o <a> que envolve o conteúdo, classe job-link)
                     link_tag = card.find("a", class_="job-link")
                     link = "https://www.trabalhabrasil.com.br" + link_tag["href"]
+
+                    # Verifica se a vaga é realmente remota limpando espaços e caracteres especiais
+                    card_text_clean = re.sub(r'[^a-z0-9]', '', card.get_text().lower())
+                    is_remote = any(word in card_text_clean for word in ["remoto", "homeoffice", "teletrabalho", "anywhere"])
+                    
+                    if not is_remote:
+                        continue
 
                     # 3. Empresa (está no span dentro do p.job-company)
                     company_tag = card.find("p", class_="job-company")

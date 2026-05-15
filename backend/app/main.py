@@ -1,6 +1,7 @@
 # type: ignore
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, Query
+import math
 from fastapi.middleware.cors import CORSMiddleware
 
 from sqlalchemy.orm import Session
@@ -14,7 +15,7 @@ from app.infrastructure.database.models import JobModel
 from app.infrastructure.scrapers.trabalha_brasil import TrabalhaBrasilScraper
 from app.infrastructure.database.repository import JobRepository
 from app.infrastructure.notifier import NotifierService
-from app.interfaces.schemas import JobResponse, SearchRequest
+from app.interfaces.schemas import SearchRequest, PaginatedJobResponse
 from app.infrastructure.database.websocket import ConnectionManager
 
 
@@ -93,9 +94,25 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
-@app.get("/jobs", response_model=list[JobResponse])
-def get_jobs(db: Session = Depends(get_db)) -> list[JobModel]:
-    return db.query(JobModel).order_by(JobModel.discovered_at.desc()).all()
+@app.get("/jobs", response_model=PaginatedJobResponse)
+def get_jobs(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    total_items = db.query(JobModel).count()
+    total_pages = math.ceil(total_items / limit) if limit > 0 else 1
+    offset = (page - 1) * limit
+
+    jobs = db.query(JobModel).order_by(JobModel.discovered_at.desc())\
+        .offset(offset).limit(limit).all()
+
+    return {
+        "items": jobs,
+        "total_items": total_items,
+        "total_pages": total_pages,
+        "current_page": page
+    }
 
 
 @app.post("/search")

@@ -18,3 +18,10 @@ class JobResponse(BaseModel):
 
 class SearchRequest(BaseModel):
     keyword: str
+
+
+class PaginatedJobResponse(BaseModel):
+    items: list[JobResponse]
+    total_items: int
+    total_pages: int
+    current_page: int
