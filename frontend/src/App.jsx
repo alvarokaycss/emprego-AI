@@ -2,14 +2,20 @@ import { useEffect, useState } from 'react'
 import { getJobs } from './api/jobs'
 import JobCard from './components/JobCard'
 import Header from './components/Header'
-import { Routes, Route } from 'react-router-dom'
+import { Pagination } from './components/Pagination'
+import { Routes, Route, useSearchParams } from 'react-router-dom'
 
 function App() {
   const [jobs, setJobs] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
   const [keyword, setKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const reactPaginatePage = pageParam - 1;
 
     const handleSearch = async (e) => {
     e.preventDefault(); // Evita que a página recarregue ao dar Enter
@@ -39,23 +45,22 @@ function App() {
       Notification.requestPermission();
     }
 
-    // 2. Fetch inicial
-    getJobs()
-      .then(data => setJobs(data))
-      .finally(() => setLoading(false));
-
-    // 3. WebSocket
+    // 2. WebSocket
     const ws = new WebSocket("ws://localhost:8000/ws");
 
     ws.onmessage = (event) => {
       const newJobs = JSON.parse(event.data);
 
-      setJobs(oldJobs => [...newJobs, ...oldJobs]);
+      setJobs(oldJobs => {
+        // Para não duplicar vagas, uma verificação rápida
+        // (opcional, dependendo de como o ID vem)
+        return [...newJobs, ...oldJobs];
+      });
 
       setToastMessage(`Nova(s) vaga(s) encontrada(s)!`)
       setTimeout(() => setToastMessage(null), 4000)
 
-      // 4. Notificação (no lugar correto)
+      // 3. Notificação
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("EmpregoAÍ - Novas Vagas!", {
           body: `Acabamos de encontrar ${newJobs.length} novas oportunidades.`,
@@ -65,7 +70,22 @@ function App() {
     };
 
     return () => ws.close();
-  }, []);
+  }, []); // Executa apenas uma vez ao abrir o app
+
+  useEffect(() => {
+    // 4. Fetch baseado na página
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const data = await getJobs(pageParam);
+        setJobs(data.items || []);
+        setTotalPages(data.total_pages || 0);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, [pageParam]); // Re-executa sempre que a página mudar
 
   return (
     <>
@@ -88,7 +108,7 @@ function App() {
                 <form onSubmit={handleSearch} className="flex items-center bg-fundo border border-primaria rounded-full shadow-lg p-1">
                   <input 
                     type="text" 
-                    placeholder="Busque por um cargo específico..." 
+                    placeholder="Busque por cargo específico nos sites monitorados..." 
                     className="flex-1 bg-transparent text-texto px-4 outline-none placeholder-slate-400"
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -114,6 +134,14 @@ function App() {
                 ) : (
                   <p className="text-center text-slate-500">Nenhuma vaga encontrada ainda.</p>
                 )}
+                
+                <Pagination 
+                  pageCount={totalPages} 
+                  currentPage={reactPaginatePage} 
+                  onPageChange={(event) => {
+                    setSearchParams({ page: event.selected + 1 });
+                  }} 
+                />
               </div>
             )}
           </div>
